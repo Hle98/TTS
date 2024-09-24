@@ -43,14 +43,14 @@ def createSSML(text):
 def TextToSpeech(name):
     audio_config = speechsdk.audio.AudioOutputConfig(use_default_speaker=True)
     speech_config.set_speech_synthesis_output_format(speechsdk.SpeechSynthesisOutputFormat.Riff8Khz8BitMonoMULaw) 
-    speech_synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config, audio_config=None)
+    speech_synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config, audio_config=audio_config)
     name_dict = []
     for i in range(0,len(name)):
         ssml_string = createSSML(name[i][0])
         result = speech_synthesizer.speak_ssml_async(ssml_string).get()
         stream = speechsdk.AudioDataStream(result)
-        stream.save_to_wav_file("G:\Shared drives\IVS Docs\Test Aculab\8Khz8BitMonoMULaw\Voice-Andrew\instructions\\"+name[i][1]+".wav")
-        name_dict.append(name[i][0],name[i][1])
+        stream.save_to_wav_file("D:\Test-TTS\\"+name[i][1]+".wav")
+        name_dict.append([name[i][0],name[i][1]])
         if result.reason == speechsdk.ResultReason.Canceled:
             cancellation_details = result.cancellation_details
             print("Speech synthesis canceled: {}".format(cancellation_details.reason))
@@ -81,17 +81,32 @@ def WriteTextToFile(name_dict):
 
     # name of csv file
     filename = "D:\Test-TTS\Text.csv"
+    file_exists = os.path.isfile(filename)
+    if not file_exists:
+        # writing to csv file
+        with open(filename, 'w',encoding="utf8",newline='') as csvfile:
+            # creating a csv writer object
+            csvwriter = csv.writer(csvfile)
 
-    # writing to csv file
-    with open(filename, 'w',encoding="utf8",newline='') as csvfile:
-        # creating a csv writer object
-        csvwriter = csv.writer(csvfile)
+            # writing the fields
+            csvwriter.writerow(fields)
 
-        # writing the fields
-        csvwriter.writerow(fields)
+            # writing the data rows
+            csvwriter.writerows(name_dict)
+    else:
+        with open(filename, mode='r', newline='') as file:
+            reader = csv.reader(file)
+            data = list(reader)  # Convert to a list for manipulation
+            
+        with open(filename, 'a',encoding="utf8",newline='') as csvfile:
+            # creating a csv writer object
+            csvwriter = csv.writer(csvfile)
 
-        # writing the data rows
-        csvwriter.writerows(name_dict)
+            # writing the fields
+            csvwriter.writerow(fields)
+
+            # writing the data rows
+            csvwriter.writerows(name_dict)
 def SpeechToText(audio):    
     def stop_cb(evt):
         """callback that stops continuous recognition upon receiving an event `evt`"""
